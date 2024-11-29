@@ -39,16 +39,25 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import uk.ac.manchester.tornado.api.*;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat4;
+import uk.ac.manchester.tornado.api.GridScheduler;
+import uk.ac.manchester.tornado.api.TaskGraph;
+import uk.ac.manchester.tornado.api.TornadoBackend;
+import uk.ac.manchester.tornado.api.TornadoExecutionPlan;
+import uk.ac.manchester.tornado.api.TornadoRuntime;
+import uk.ac.manchester.tornado.api.WorkerGrid;
+import uk.ac.manchester.tornado.api.WorkerGrid2D;
 import uk.ac.manchester.tornado.api.common.TornadoDevice;
-import uk.ac.manchester.tornado.api.runtime.TornadoRuntime;
+
+import uk.ac.manchester.tornado.api.enums.DataTransferMode;
+import uk.ac.manchester.tornado.api.runtime.TornadoRuntimeProvider;
+import uk.ac.manchester.tornado.api.types.arrays.FloatArray;
+import uk.ac.manchester.tornado.api.types.arrays.IntArray;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +74,7 @@ public class Main {
      * Pixel buffer containing ARGB values of pixel colors for renderer to write to
      * Size = width * height of canvas resolution
      **/
-    private static int[] OB_pixels;
+    private static IntArray OB_pixels;
 
     /**
      * INPUT BUFFER
@@ -79,7 +88,7 @@ public class Main {
      * camera[4]: pitch of rotation
      * camera[5]: field of view (FOV)
      **/
-    private static float[] IB_camera;
+    private static FloatArray IB_camera;
 
     /**
      * INPUT BUFFER
@@ -89,7 +98,7 @@ public class Main {
      * dimensions[0]: width
      * dimensions[1]: height
      **/
-    private static int[] IB_dimensions;
+    private static IntArray IB_dimensions;
 
     /**
      * INPUT BUFFER
@@ -116,7 +125,7 @@ public class Main {
      * Skybox represented by a vector of Float4 values containing R, G, B values as floats in the range of [0, 1]
      **/
     private static VectorFloat4 IB_skybox;
-    private static int[] IB_skyboxDimensions;
+    private static IntArray IB_skyboxDimensions;
 
     /**
      * INPUT BUFFER
@@ -126,7 +135,7 @@ public class Main {
      * rayTracingProperties[0]: Sample size of soft shadows
      * rayTracingProperties[1]: Bounce limit for reflection rays
      **/
-    private static int[] IB_rayTracingProperties;
+    private static IntArray IB_rayTracingProperties;
     /**
      * JavaFX GUI elements
      */
@@ -203,10 +212,10 @@ public class Main {
 
     // Tornado elements
     private ArrayList<TornadoDevice> devices;
-    private TaskSchedule ts;
+    private TornadoExecutionPlan executionPlan;
     private GridScheduler grid;
-    private volatile boolean renderWithTornado;
 
+    private volatile boolean renderWithTornado;
     private volatile boolean renderWithJavaStreams;
 
     // PixelWriter and it's format
@@ -235,8 +244,8 @@ public class Main {
         setupRenderingEnvironment();
         System.out.println("Allocating buffers...");
         allocateBuffers();
-        System.out.println("Setting up Tornado Task Schedule...");
-        setupTornadoTaskSchedule();
+        System.out.println("Setting up Tornado Task Graph...");
+        setupTornadoTaskGraph();
         System.out.println("Getting Available Tornado Devices...");
         setAvailableDevices();
         System.out.println("Setting up operating loops...");
@@ -251,7 +260,7 @@ public class Main {
 
 
     /**
-     * Initialise canvas, dimensions, pixel writer, format, camera and ray tracing properties
+     * IInitialise canvas, dimensions, pixel writer, format, camera and ray tracing properties
      */
     private void setupRenderingEnvironment() {
 
@@ -280,13 +289,13 @@ public class Main {
     private void allocateBuffers() {
 
         // Output buffer
-        OB_pixels = new int[width * height];
+        OB_pixels = new IntArray(width * height);
 
         // Input buffers
-        IB_dimensions = new int[]{width, height};
+        IB_dimensions = IntArray.fromElements(width, height);
         IB_camera = camera.getBuffer();
 
-        IB_rayTracingProperties = new int[]{shadowSampleSize, reflectionBounces};
+        IB_rayTracingProperties = IntArray.fromElements(shadowSampleSize, reflectionBounces);
 
         IB_bodyPositions = world.getBodyPositionsBuffer();
         IB_bodySizes = world.getBodySizesBuffer();
@@ -294,30 +303,35 @@ public class Main {
         IB_bodyReflectivities = world.getBodyReflectivitiesBuffer();
 
         IB_skybox = world.getSkyboxBuffer();
-        IB_skyboxDimensions = world.getSkyboxDimensionsBuffer();
+
+
+        IB_skyboxDimensions = IntArray.fromElements( world.getSkyboxDimensionsBuffer()[0],  world.getSkyboxDimensionsBuffer()[1]);
+
+
     }
 
 
     /**
-     * Define Tornado task schedule for Parallel Renderer.render method
+     * Define Tornado task graph for Parallel Renderer.render method
      */
-    private void setupTornadoTaskSchedule() {
+    private void setupTornadoTaskGraph() {
 
-        // Define task schedule
-        ts = new TaskSchedule("s0");
-        ts.streamIn(IB_camera, IB_rayTracingProperties, IB_bodyPositions);
+        // Define task graph
+        TaskGraph ts = new TaskGraph("s0");
+        ts.transferToDevice(DataTransferMode.EVERY_EXECUTION, IB_camera, IB_rayTracingProperties, IB_bodyPositions);
+        ts.transferToDevice(DataTransferMode.FIRST_EXECUTION, IB_dimensions, IB_bodySizes, IB_bodyColors, IB_bodyReflectivities, IB_skybox, IB_skyboxDimensions);
         ts.task("t0", Renderer::render, OB_pixels,
                 IB_dimensions, IB_camera, IB_rayTracingProperties,
                 IB_bodyPositions, IB_bodySizes, IB_bodyColors, IB_bodyReflectivities,
                 IB_skybox, IB_skyboxDimensions);
-        ts.lockObjectsInMemory(IB_dimensions, IB_bodySizes, IB_bodyColors, IB_bodyReflectivities, IB_skybox, IB_skyboxDimensions);
-        ts.streamOut(OB_pixels);
+        ts.transferToHost(DataTransferMode.EVERY_EXECUTION, OB_pixels);
 
         // Define worker grid
-        WorkerGrid worker = new WorkerGrid2D(IB_dimensions[0], IB_dimensions[1]);
+        WorkerGrid worker = new WorkerGrid2D(IB_dimensions.get(0), IB_dimensions.get(1));
         worker.setLocalWork(16, 16, 1);
         grid = new GridScheduler();
         grid.setWorkerGrid("s0.t0", worker);
+        executionPlan = new TornadoExecutionPlan(ts.snapshot());
     }
 
 
@@ -335,13 +349,13 @@ public class Main {
         deviceDropdown.getItems().add("(Java Parallel Streams) - CPU");
 
         // Get Tornado drivers
-        TornadoRuntimeCI runtimeCI = TornadoRuntime.getTornadoRuntime();
-        int numTornadoDrivers = runtimeCI.getNumDrivers();
+        TornadoRuntime runtimeCI = TornadoRuntimeProvider.getTornadoRuntime();
+        int numBackends = runtimeCI.getNumBackends();
 
-        for (int i = 0; i < numTornadoDrivers; i++) {
+        for (int i = 0; i < numBackends; i++) {
 
-            TornadoDriver driver = runtimeCI.getDriver(i);
-            int numDevices = driver.getDeviceCount();
+            TornadoBackend driver = runtimeCI.getBackend(i);
+            int numDevices = driver.getNumDevices();
 
             // Add Tornado devices, perform initial mapping
             for (int j = 0; j < numDevices; j++) {
@@ -353,8 +367,9 @@ public class Main {
                 deviceDropdown.getItems().add(listingName);
 
                 // Perform an initial mapping to avoid runtime lag
-                ts.mapAllTo(device);
-                ts.execute(grid);
+                executionPlan.withDevice(device) //
+                        .withGridScheduler(grid) //
+                        .execute();
             }
         }
 
@@ -378,7 +393,15 @@ public class Main {
                 camera.updatePositionOnMovement(fwd, back, strafeL, strafeR, up, down);
 
                 // Set the pixels on the canvas when render is ready
-                pixelWriter.setPixels(0, 0, width, height, format, OB_pixels, 0, width);
+
+                int[] temp =  new int[OB_pixels.getSize()];
+
+                for (int i = 0; i < OB_pixels.getSize(); i++) {
+                    temp[i] = OB_pixels.get(i);
+                }
+
+
+                pixelWriter.setPixels(0, 0, width, height, format, temp, 0, width);
 
                 // Render
                 render();
@@ -447,12 +470,12 @@ public class Main {
         camera.updateBuffer();
         world.updateBodyPositionBuffer();
 
-        IB_rayTracingProperties[0] = shadowSampleSize;
-        IB_rayTracingProperties[1] = reflectionBounces;
+        IB_rayTracingProperties.set(0, shadowSampleSize);
+        IB_rayTracingProperties.set(1, reflectionBounces);
 
         // Render to output buffer
         if (renderWithTornado) {
-            ts.execute(grid);
+            executionPlan.execute();
         } else if (renderWithJavaStreams) {
             Renderer.renderWithParallelStreams(OB_pixels, IB_dimensions, IB_camera, IB_rayTracingProperties,
                         IB_bodyPositions, IB_bodySizes, IB_bodyColors, IB_bodyReflectivities,
@@ -589,14 +612,14 @@ public class Main {
             renderWithTornado = false;
             renderWithJavaStreams = true;
         } else if (selectedDeviceIndex > 1) {
-            // Map task schedule to selected device if selected device is tornado device
+            // Map task graph to selected device if selected device is tornado device
             TornadoDevice device = devices.get(selectedDeviceIndex - 1);
             shadowSampleSizeSlider.setMax(Settings.MAX_SHADOW_SAMPLE_SIZE);
             shadowSampleSizeSlider.setMajorTickUnit(50);
             shadowSampleSizeSlider.setMinorTickCount(50);
             renderWithTornado = true;
             renderWithJavaStreams = false;
-            ts.mapAllTo(device);
+            executionPlan.withDevice(device);
         }
     }
 

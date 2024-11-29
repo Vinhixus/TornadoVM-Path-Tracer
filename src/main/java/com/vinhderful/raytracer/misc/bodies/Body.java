@@ -18,7 +18,7 @@
  */
 package com.vinhderful.raytracer.misc.bodies;
 
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * Abstract class representing a solid body in a 3D space using its
@@ -37,10 +37,14 @@ public abstract class Body {
     /**
      * Create a body with given position, size, color and reflectivity
      *
-     * @param position     position represented by a vector in 3d space
-     * @param size         scale of the body
-     * @param color        color of the body represented by RGB values
-     * @param reflectivity reflectivity of the object
+     * @param position
+     *     position represented by a vector in 3d space
+     * @param size
+     *     scale of the body
+     * @param color
+     *     color of the body represented by RGB values
+     * @param reflectivity
+     *     reflectivity of the object
      */
     public Body(Float4 position, float size, Float4 color, float reflectivity) {
         this.position = position;
@@ -62,7 +66,8 @@ public abstract class Body {
     /**
      * Set the position of this body to a given value
      *
-     * @param position the value to set the position of this body to
+     * @param position
+     *     the value to set the position of this body to
      */
     public void setPosition(Float4 position) {
         this.position = position;
@@ -80,7 +85,8 @@ public abstract class Body {
     /**
      * Set the position of this body to a given value
      *
-     * @param position the value to set the position of this body to
+     * @param position
+     *     the value to set the position of this body to
      */
     public void setPreviousPosition(Float4 position) {
         this.previousPosition = position;

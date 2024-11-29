@@ -18,10 +18,10 @@
  */
 package com.vinhderful.raytracer.utils;
 
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.max;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.min;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.max;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.min;
 
 /**
  * Color definitions and operations, a color is represented by RGB float values in a Float4, where

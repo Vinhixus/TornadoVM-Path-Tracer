@@ -18,7 +18,7 @@
  */
 package com.vinhderful.raytracer.misc.bodies;
 
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * Represents a sphere using position, radius and color and reflectivity

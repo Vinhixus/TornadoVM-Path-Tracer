@@ -18,17 +18,12 @@
  */
 package com.vinhderful.raytracer.utils;
 
-import uk.ac.manchester.tornado.api.collections.math.TornadoMath;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat4;
-
-import static com.vinhderful.raytracer.misc.World.*;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.abs;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.floatPI;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.floor;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.max;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.min;
+import com.vinhderful.raytracer.misc.World;
+import uk.ac.manchester.tornado.api.math.TornadoMath;
+import uk.ac.manchester.tornado.api.types.arrays.IntArray;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * Operations on the objects in the scene
@@ -58,7 +53,7 @@ public class BodyOps {
         final Float4 NO_INTERSECTION = new Float4(-1F, -1F, -1F, -1F);
 
         // Light
-        if (hitIndex == LIGHT_INDEX) {
+        if (hitIndex == World.LIGHT_INDEX) {
 
             Float4 min = Float4.sub(position, size * 0.5F);
             Float4 max = Float4.add(position, size * 0.5F);
@@ -74,8 +69,8 @@ public class BodyOps {
             float t5 = (min.getZ() - rayOrigin.getZ()) * dZ;
             float t6 = (max.getZ() - rayOrigin.getZ()) * dZ;
 
-            float tMin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
-            float tMax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+            float tMin = TornadoMath.max(TornadoMath.max(TornadoMath.min(t1, t2), TornadoMath.min(t3, t4)), TornadoMath.min(t5, t6));
+            float tMax = TornadoMath.min(TornadoMath.min(TornadoMath.max(t1, t2), TornadoMath.max(t3, t4)), TornadoMath.max(t5, t6));
 
             if (tMax < 0 || tMin > tMax)
                 return NO_INTERSECTION;
@@ -87,11 +82,11 @@ public class BodyOps {
         }
 
         // Plane
-        else if (hitIndex == PLANE_INDEX) {
+        else if (hitIndex == World.PLANE_INDEX) {
             float t = -(rayOrigin.getY() - position.getY()) / rayDirection.getY();
             if (t > 0 && Float.isFinite(t)) {
                 Float4 intersection = Float4.add(rayOrigin, Float4.mult(rayDirection, t));
-                if (abs(intersection.getX()) > size * 0.5F || abs(intersection.getZ()) > size * 0.5F)
+                if (TornadoMath.abs(intersection.getX()) > size * 0.5F || TornadoMath.abs(intersection.getZ()) > size * 0.5F)
                     return NO_INTERSECTION;
                 else
                     return intersection;
@@ -140,7 +135,7 @@ public class BodyOps {
         boolean intersects = false;
 
         // Loop over objects in the scene, excluding light and plane, break out of loop when intersection is found
-        for (int i = SPHERES_START_INDEX; i < bodyPositions.getLength() && !intersects; i++) {
+        for (int i = World.SPHERES_START_INDEX; i < bodyPositions.getLength() && !intersects; i++) {
 
             // Calculate the intersection of the ray with the current object
             Float4 intersection = BodyOps.getIntersection(i, bodyPositions.get(i), bodySizes.get(i), rayOrigin, rayDirection);
@@ -208,7 +203,7 @@ public class BodyOps {
     public static Float4 getNormal(int hitIndex, Float4 position, Float4 point) {
 
         // Plane normal is an up vector in the y direction
-        if (hitIndex == PLANE_INDEX) {
+        if (hitIndex == World.PLANE_INDEX) {
             return new Float4(0, 1F, 0, 0);
         }
 
@@ -228,9 +223,9 @@ public class BodyOps {
     public static Float4 getColor(int hitIndex, Float4 point, VectorFloat4 bodyColors) {
 
         // Get checkerboard pattern for plane
-        if (hitIndex == PLANE_INDEX) {
+        if (hitIndex == World.PLANE_INDEX) {
 
-            if ((int) (floor(point.getX()) + floor(point.getZ())) % 2 == 0)
+            if ((int) (TornadoMath.floor(point.getX()) + TornadoMath.floor(point.getZ())) % 2 == 0)
                 // GRAY
                 return new Float4(0.4F, 0.4F, 0.4F, 0);
             else
@@ -251,16 +246,16 @@ public class BodyOps {
      * @param direction        the direction from the sphere origin to the surface
      * @return the UV-mapped color of the skybox at in the specified direction
      */
-    public static Float4 getSkyboxColor(VectorFloat4 skybox, int[] skyBoxDimensions, Float4 direction) {
+    public static Float4 getSkyboxColor(VectorFloat4 skybox, IntArray skyBoxDimensions, Float4 direction) {
 
         // Convert unit vector to texture coordinates
         // https://en.wikipedia.org/wiki/UV_mapping#Finding_UV_on_a_sphere
-        float u = 0.5F + TornadoMath.atan2(direction.getZ(), direction.getX()) / (2 * floatPI());
-        float v = 0.5F - TornadoMath.asin(direction.getY()) / floatPI();
+        float u = 0.5F + TornadoMath.atan2(direction.getZ(), direction.getX()) / (2 * TornadoMath.floatPI());
+        float v = 0.5F - TornadoMath.asin(direction.getY()) / TornadoMath.floatPI();
 
         // Get color from the skybox VectorFloat4
-        int x = (int) (u * (skyBoxDimensions[0] - 1));
-        int y = (int) (v * (skyBoxDimensions[1] - 1));
-        return skybox.get(x + y * skyBoxDimensions[0]);
+        int x = (int) (u * (skyBoxDimensions.get(0) - 1));
+        int y = (int) (v * (skyBoxDimensions.get(1) - 1));
+        return skybox.get(x + y * skyBoxDimensions.get(0));
     }
 }

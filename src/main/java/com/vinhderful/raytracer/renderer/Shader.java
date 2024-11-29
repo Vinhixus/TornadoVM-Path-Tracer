@@ -18,17 +18,18 @@
  */
 package com.vinhderful.raytracer.renderer;
 
+
 import com.vinhderful.raytracer.utils.BodyOps;
 import com.vinhderful.raytracer.utils.Color;
 import com.vinhderful.raytracer.utils.Float4Ext;
-import uk.ac.manchester.tornado.api.collections.math.TornadoMath;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat4;
+import uk.ac.manchester.tornado.api.math.TornadoMath;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.floatPI;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.max;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.pow;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.floatPI;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.max;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.pow;
 
 /**
  * The Shader class contains operations to perform Blinn-Phong shading, calculating reflections and soft shadows
@@ -60,7 +61,6 @@ public class Shader {
      */
     public static final float MAX_REFLECTIVITY = 128F;
 
-
     /**
      * Given a ray and a hit object, mix ambient, diffuse and specular lighting to create a 3D shaded appearance
      * for the given object and return the color at the hit position
@@ -68,19 +68,24 @@ public class Shader {
      * https://learnopengl.com/Lighting/Basic-Lighting
      * https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
      *
-     * @param hitIndex         the index of the hit object
-     * @param hitPosition      the position of the hit
-     * @param rayOrigin        the ray's origin
-     * @param bodyPosition     the position of the hit object
-     * @param bodyColor        the color of the hit object
-     * @param bodyReflectivity the reflectivity/shininess of the hit object
-     * @param lightPosition    the position of the light
+     * @param hitIndex
+     *     the index of the hit object
+     * @param hitPosition
+     *     the position of the hit
+     * @param rayOrigin
+     *     the ray's origin
+     * @param bodyPosition
+     *     the position of the hit object
+     * @param bodyColor
+     *     the color of the hit object
+     * @param bodyReflectivity
+     *     the reflectivity/shininess of the hit object
+     * @param lightPosition
+     *     the position of the light
      * @return a Float4 containing the color of the object at the given hit position after applying the Blinn-Phong
-     * shading model
+     *     shading model
      */
-    public static Float4 getBlinnPhong(int hitIndex, Float4 hitPosition, Float4 rayOrigin,
-                                       Float4 bodyPosition, Float4 bodyColor, float bodyReflectivity,
-                                       Float4 lightPosition) {
+    public static Float4 getBlinnPhong(int hitIndex, Float4 hitPosition, Float4 rayOrigin, Float4 bodyPosition, Float4 bodyColor, float bodyReflectivity, Float4 lightPosition) {
 
         // Ambient and diffuse lighting
         float diffuse = max(AMBIENT_STRENGTH, getDiffuse(hitIndex, hitPosition, bodyPosition, lightPosition));
@@ -92,18 +97,21 @@ public class Shader {
         return Color.mult(Color.add(bodyColor, specular), diffuse);
     }
 
-
     /**
      * Given hit object and the light position, apply diffuse shading according to the Blinn-Phong model and return the
      * diffuse factor of the object at the hit position
      * https://learnopengl.com/Lighting/Basic-Lighting
      *
-     * @param hitIndex      the index of the hit object
-     * @param hitPosition   the position of the hit
-     * @param bodyPosition  the position of the hit object
-     * @param lightPosition the position of the light
+     * @param hitIndex
+     *     the index of the hit object
+     * @param hitPosition
+     *     the position of the hit
+     * @param bodyPosition
+     *     the position of the hit object
+     * @param lightPosition
+     *     the position of the light
      * @return a float containing the diffuse factor of the object at the given position - i.e. how dark the object
-     * is at the position according to the light
+     *     is at the position according to the light
      */
     public static float getDiffuse(int hitIndex, Float4 hitPosition, Float4 bodyPosition, Float4 lightPosition) {
 
@@ -117,24 +125,27 @@ public class Shader {
         return Float4.dot(hitNormal, lightDirection);
     }
 
-
     /**
      * Given hit object, the ray and the light position, apply specular shading according to the Blinn-Phong model and
      * return the specular factor of the object at the hit position
      * https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
      *
-     * @param hitIndex         the index of the hit object
-     * @param hitPosition      the position of the hit
-     * @param rayOrigin        the ray's origin
-     * @param bodyPosition     the position of the hit object
-     * @param bodyReflectivity the reflectivity/shininess of the hit object
-     * @param lightPosition    the position of the light
+     * @param hitIndex
+     *     the index of the hit object
+     * @param hitPosition
+     *     the position of the hit
+     * @param rayOrigin
+     *     the ray's origin
+     * @param bodyPosition
+     *     the position of the hit object
+     * @param bodyReflectivity
+     *     the reflectivity/shininess of the hit object
+     * @param lightPosition
+     *     the position of the light
      * @return a float containing the specular factor of the object at the given position - i.e. how bright the specular
-     * highlight is at the position according to the light
+     *     highlight is at the position according to the light
      */
-    public static float getSpecular(int hitIndex, Float4 hitPosition, Float4 rayOrigin,
-                                    Float4 bodyPosition, float bodyReflectivity,
-                                    Float4 lightPosition) {
+    public static float getSpecular(int hitIndex, Float4 hitPosition, Float4 rayOrigin, Float4 bodyPosition, float bodyReflectivity, Float4 lightPosition) {
 
         // Calculate direction to the camera and to the light
         Float4 viewDirection = Float4.normalise(Float4.sub(rayOrigin, hitPosition));
@@ -163,17 +174,22 @@ public class Shader {
      * This sphere is uniformly sampled using the sunflower seed arrangement/vogel spiral phenomenon:
      * https://www.codeproject.com/Articles/1221341/The-Vogel-Spiral-Phenomenon
      *
-     * @param hitPosition   the position of the hit
-     * @param bodyPositions the structure representing the positions of the objects in the scene
-     * @param bodySizes     the structure representing the sizes of the objects in the scene
-     * @param lightPosition the position of the light
-     * @param lightSize     the size of the light
-     * @param sampleSize    how many samples to take from the light for the soft shadow effect
+     * @param hitPosition
+     *     the position of the hit
+     * @param bodyPositions
+     *     the structure representing the positions of the objects in the scene
+     * @param bodySizes
+     *     the structure representing the sizes of the objects in the scene
+     * @param lightPosition
+     *     the position of the light
+     * @param lightSize
+     *     the size of the light
+     * @param sampleSize
+     *     how many samples to take from the light for the soft shadow effect
      * @return a float factor that determines how dark the hit object should be at the hit position according to
-     * the cast shadows
+     *     the cast shadows
      */
-    public static float getShadow(Float4 hitPosition, VectorFloat4 bodyPositions, VectorFloat bodySizes,
-                                  Float4 lightPosition, float lightSize, int sampleSize) {
+    public static float getShadow(Float4 hitPosition, VectorFloat4 bodyPositions, VectorFloat bodySizes, Float4 lightPosition, float lightSize, int sampleSize) {
 
         // Get a main shadow feeler ray direction from the hit position to the light
         Float4 n = Float4.normalise(Float4.sub(hitPosition, lightPosition));
@@ -211,7 +227,9 @@ public class Shader {
         }
 
         // Calculate soft shadows according to how many of the sampled shadow feelers hit an object
-        if (raysHit == 0) return 1;
-        else return 1 - (float) raysHit / (sampleSize * (1 + SHADOW_BRIGHTNESS));
+        if (raysHit == 0)
+            return 1;
+        else
+            return 1 - (float) raysHit / (sampleSize * (1 + SHADOW_BRIGHTNESS));
     }
 }

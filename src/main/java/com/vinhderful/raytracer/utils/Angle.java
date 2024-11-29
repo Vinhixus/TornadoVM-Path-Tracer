@@ -18,7 +18,7 @@
  */
 package com.vinhderful.raytracer.utils;
 
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.floatPI;
+import uk.ac.manchester.tornado.api.math.TornadoMath;
 
 /**
  * Represents helper variables to compute operations with angles
@@ -28,5 +28,5 @@ public class Angle {
     /**
      * Multiply a degree value with this constant to get the equivalent radians value
      */
-    public static final float TO_RADIANS = floatPI() / 180;
+    public static final float TO_RADIANS = TornadoMath.floatPI() / 180;
 }

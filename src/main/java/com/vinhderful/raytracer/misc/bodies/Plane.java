@@ -19,7 +19,7 @@
 package com.vinhderful.raytracer.misc.bodies;
 
 import com.vinhderful.raytracer.utils.Color;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * Represents a plane as the bottom side of a bounding box

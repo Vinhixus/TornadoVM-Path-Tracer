@@ -18,12 +18,12 @@
  */
 package com.vinhderful.raytracer.misc;
 
-import com.vinhderful.raytracer.misc.bodies.Body;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import static com.vinhderful.raytracer.misc.World.SPHERES_START_INDEX;
 
 import java.util.ArrayList;
 
-import static com.vinhderful.raytracer.misc.World.SPHERES_START_INDEX;
+import com.vinhderful.raytracer.misc.bodies.Body;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * The physics class includes logic for gravity and collision detection using the Verlet Integration.
@@ -50,7 +50,8 @@ public class Physics {
     /**
      * Construct a physics service given a world to operate on
      *
-     * @param world the world containing the spheres to perform physics calculations on
+     * @param world
+     *     the world containing the spheres to perform physics calculations on
      */
     public Physics(World world) {
         this.world = world;

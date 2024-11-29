@@ -18,15 +18,15 @@
  */
 package com.vinhderful.raytracer;
 
+import java.io.IOException;
+import java.util.Objects;
+
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.Objects;
 
 /**
  * Java-based Ray Tracer using JavaFX
@@ -36,7 +36,8 @@ public class App extends Application {
     /**
      * Launch application window
      *
-     * @param args program arguments
+     * @param args
+     *     program arguments
      */
     public static void main(String[] args) {
         launch(args);
@@ -45,7 +46,8 @@ public class App extends Application {
     /**
      * Initialise application window
      *
-     * @param stage the stage to show
+     * @param stage
+     *     the stage to show
      */
     @Override
     public void start(Stage stage) {
@@ -58,7 +60,8 @@ public class App extends Application {
         }
 
         Scene scene = null;
-        if (root != null) scene = new Scene(root);
+        if (root != null)
+            scene = new Scene(root);
 
         stage.setTitle("TornadoVM Ray Tracer");
         stage.getIcons().add(new Image(Objects.requireNonNull(App.class.getResourceAsStream("icon.png"))));

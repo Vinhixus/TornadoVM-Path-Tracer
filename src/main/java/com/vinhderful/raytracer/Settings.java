@@ -18,7 +18,7 @@
  */
 package com.vinhderful.raytracer;
 
-import uk.ac.manchester.tornado.api.collections.types.Float3;
+import uk.ac.manchester.tornado.api.types.vectors.Float3;
 
 /**
  * Settings class contains variables users can tweak to change the rendering environment and the GUI

@@ -18,7 +18,11 @@
  */
 package com.vinhderful.raytracer.controllers;
 
+import java.io.IOException;
+import java.util.Objects;
+
 import com.vinhderful.raytracer.App;
+
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -29,9 +33,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.util.Objects;
 
 /**
  * Controller class for Loading window popping up while main program is loading
@@ -72,7 +73,8 @@ public class Loading {
         createMainWindow.setOnSucceeded(e -> {
             BorderPane root = (BorderPane) createMainWindow.getValue();
             Scene scene = null;
-            if (root != null) scene = new Scene(root);
+            if (root != null)
+                scene = new Scene(root);
 
             Stage stage = new Stage();
             stage.setTitle("TornadoVM Ray Tracer");

@@ -36,7 +36,8 @@ public class About {
     /**
      * Open a given uri
      *
-     * @param uri uri string
+     * @param uri
+     *     uri string
      */
     private void openURL(String uri) {
         // TODO implement code to open URIs

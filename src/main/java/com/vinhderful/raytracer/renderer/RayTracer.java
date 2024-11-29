@@ -18,16 +18,21 @@
  */
 package com.vinhderful.raytracer.renderer;
 
-import com.vinhderful.raytracer.utils.BodyOps;
-import com.vinhderful.raytracer.utils.Color;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat;
-import uk.ac.manchester.tornado.api.collections.types.VectorFloat4;
-
 import static com.vinhderful.raytracer.misc.World.LIGHT_INDEX;
 import static com.vinhderful.raytracer.misc.World.PLANE_INDEX;
-import static com.vinhderful.raytracer.renderer.Shader.*;
-import static uk.ac.manchester.tornado.api.collections.math.TornadoMath.max;
+import static com.vinhderful.raytracer.renderer.Shader.AMBIENT_STRENGTH;
+import static com.vinhderful.raytracer.renderer.Shader.MAX_REFLECTIVITY;
+import static com.vinhderful.raytracer.renderer.Shader.getDiffuse;
+import static com.vinhderful.raytracer.renderer.Shader.getShadow;
+import static com.vinhderful.raytracer.renderer.Shader.getSpecular;
+import static uk.ac.manchester.tornado.api.math.TornadoMath.max;
+
+import com.vinhderful.raytracer.utils.BodyOps;
+import com.vinhderful.raytracer.utils.Color;
+import uk.ac.manchester.tornado.api.types.arrays.IntArray;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat;
+import uk.ac.manchester.tornado.api.types.collections.VectorFloat4;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 /**
  * The Ray Tracer class contains algorithms that bounce rays around the scene to gather color, shading and reflection
@@ -39,26 +44,36 @@ public class RayTracer {
      * Given a hit object and the ray that hit the object, bounce the ray according to the reflection bounce limit
      * around the scene to gather the color of the reflection
      *
-     * @param hitIndex              the index of the hit object
-     * @param hitPosition           the position of the hit object
-     * @param rayDirection          the ray's direction
-     * @param bodyPositions         the structure containing the positions of the objects in the scene
-     * @param bodySizes             the structure containing the sizes of the objects in the scene
-     * @param bodyColors            the structure containing the colors of the objects in the scene
-     * @param bodyReflectivities    the structure containing the reflectivities of the objects in the scene
-     * @param lightPosition         the position of the light source
-     * @param lightSize             the size of the light source
-     * @param skybox                the structure the colors of the skybox image
-     * @param skyboxDimensions      the structure the dimensions of the skybox image
-     * @param shadowSampleSize      the sample size to calculate soft shadows with
-     * @param reflectionBounceLimit the limit of how many times the reflection can bounce
+     * @param hitIndex
+     *     the index of the hit object
+     * @param hitPosition
+     *     the position of the hit object
+     * @param rayDirection
+     *     the ray's direction
+     * @param bodyPositions
+     *     the structure containing the positions of the objects in the scene
+     * @param bodySizes
+     *     the structure containing the sizes of the objects in the scene
+     * @param bodyColors
+     *     the structure containing the colors of the objects in the scene
+     * @param bodyReflectivities
+     *     the structure containing the reflectivities of the objects in the scene
+     * @param lightPosition
+     *     the position of the light source
+     * @param lightSize
+     *     the size of the light source
+     * @param skybox
+     *     the structure the colors of the skybox image
+     * @param skyboxDimensions
+     *     the structure the dimensions of the skybox image
+     * @param shadowSampleSize
+     *     the sample size to calculate soft shadows with
+     * @param reflectionBounceLimit
+     *     the limit of how many times the reflection can bounce
      * @return the color of the accumulated reflection
      */
-    public static Float4 getReflection(int hitIndex, Float4 hitPosition, Float4 rayDirection,
-                                       VectorFloat4 bodyPositions, VectorFloat bodySizes, VectorFloat4 bodyColors, VectorFloat bodyReflectivities,
-                                       Float4 lightPosition, float lightSize,
-                                       VectorFloat4 skybox, int[] skyboxDimensions,
-                                       int shadowSampleSize, int reflectionBounceLimit) {
+    public static Float4 getReflection(int hitIndex, Float4 hitPosition, Float4 rayDirection, VectorFloat4 bodyPositions, VectorFloat bodySizes, VectorFloat4 bodyColors,
+            VectorFloat bodyReflectivities, Float4 lightPosition, float lightSize, VectorFloat4 skybox, IntArray skyboxDimensions, int shadowSampleSize, int reflectionBounceLimit) {
 
         // Initialise an empty reflection color, a contribution factor and shading factor
         Float4 reflectionColor = new Float4(0, 0, 0, 0);
@@ -131,24 +146,34 @@ public class RayTracer {
      * Given a hit object with its index, the hit position, the ray's origin and direction, return it's color after
      * calculating reflections and shading
      *
-     * @param hitIndex              the index of the hit object
-     * @param hitPosition           the position of the hit object
-     * @param rayOrigin             the ray's origin
-     * @param rayDirection          the ray's direction
-     * @param bodyPositions         the structure containing the positions of the objects in the scene
-     * @param bodySizes             the structure containing the sizes of the objects in the scene
-     * @param bodyColors            the structure containing the colors of the objects in the scene
-     * @param bodyReflectivities    the structure containing the reflectivities of the objects in the scene
-     * @param skybox                the structure the colors of the skybox image
-     * @param skyboxDimensions      the structure the dimensions of the skybox image
-     * @param shadowSampleSize      the sample size to calculate soft shadows with
-     * @param reflectionBounceLimit the limit of how many times the reflection can bounce
+     * @param hitIndex
+     *     the index of the hit object
+     * @param hitPosition
+     *     the position of the hit object
+     * @param rayOrigin
+     *     the ray's origin
+     * @param rayDirection
+     *     the ray's direction
+     * @param bodyPositions
+     *     the structure containing the positions of the objects in the scene
+     * @param bodySizes
+     *     the structure containing the sizes of the objects in the scene
+     * @param bodyColors
+     *     the structure containing the colors of the objects in the scene
+     * @param bodyReflectivities
+     *     the structure containing the reflectivities of the objects in the scene
+     * @param skybox
+     *     the structure the colors of the skybox image
+     * @param skyboxDimensions
+     *     the structure the dimensions of the skybox image
+     * @param shadowSampleSize
+     *     the sample size to calculate soft shadows with
+     * @param reflectionBounceLimit
+     *     the limit of how many times the reflection can bounce
      * @return the color of the hit object with shading and reflections applied
      */
-    public static Float4 getPixelColor(int hitIndex, Float4 hitPosition, Float4 rayOrigin, Float4 rayDirection,
-                                       VectorFloat4 bodyPositions, VectorFloat bodySizes, VectorFloat4 bodyColors, VectorFloat bodyReflectivities,
-                                       VectorFloat4 skybox, int[] skyboxDimensions,
-                                       int shadowSampleSize, int reflectionBounceLimit) {
+    public static Float4 getPixelColor(int hitIndex, Float4 hitPosition, Float4 rayOrigin, Float4 rayDirection, VectorFloat4 bodyPositions, VectorFloat bodySizes, VectorFloat4 bodyColors,
+            VectorFloat bodyReflectivities, VectorFloat4 skybox, IntArray skyboxDimensions, int shadowSampleSize, int reflectionBounceLimit) {
 
         // Get the position and size of the light
         Float4 lightPosition = bodyPositions.get(LIGHT_INDEX);
@@ -160,10 +185,7 @@ public class RayTracer {
         float bodyReflectivity = bodyReflectivities.get(hitIndex);
 
         // Calculate the reflection color
-        Float4 reflectionColor = getReflection(hitIndex, hitPosition, rayDirection,
-                bodyPositions, bodySizes, bodyColors, bodyReflectivities,
-                lightPosition, lightSize,
-                skybox, skyboxDimensions,
+        Float4 reflectionColor = getReflection(hitIndex, hitPosition, rayDirection, bodyPositions, bodySizes, bodyColors, bodyReflectivities, lightPosition, lightSize, skybox, skyboxDimensions,
                 shadowSampleSize, reflectionBounceLimit);
 
         // Mix the object's color and the reflection color according to its reflectivity

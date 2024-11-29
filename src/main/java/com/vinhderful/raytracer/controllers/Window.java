@@ -18,7 +18,12 @@
  */
 package com.vinhderful.raytracer.controllers;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Objects;
+
 import com.vinhderful.raytracer.App;
+
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXMLLoader;
@@ -27,10 +32,6 @@ import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Objects;
 
 /**
  * Helper class to encapsulate Controls and About windows
@@ -45,9 +46,12 @@ public class Window {
     /**
      * Instantiate a Window given a title, ray to the controlling FXML and ray to the icon
      *
-     * @param name    window title
-     * @param fxmlRay ray to FXML
-     * @param iconRay ray to icon
+     * @param name
+     *     window title
+     * @param fxmlRay
+     *     ray to FXML
+     * @param iconRay
+     *     ray to icon
      */
     public Window(String name, String fxmlRay, String iconRay) {
         this.name = name;
@@ -81,7 +85,8 @@ public class Window {
         loadTask.setOnSucceeded(e -> Platform.runLater(() -> {
             StackPane root = (StackPane) loadTask.getValue();
             Scene scene = null;
-            if (root != null) scene = new Scene(root);
+            if (root != null)
+                scene = new Scene(root);
 
             Stage stage = new Stage();
             stage.setTitle(name);

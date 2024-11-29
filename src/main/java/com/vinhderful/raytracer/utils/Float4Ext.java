@@ -18,8 +18,8 @@
  */
 package com.vinhderful.raytracer.utils;
 
-import uk.ac.manchester.tornado.api.collections.math.TornadoMath;
-import uk.ac.manchester.tornado.api.collections.types.Float4;
+import uk.ac.manchester.tornado.api.math.TornadoMath;
+import uk.ac.manchester.tornado.api.types.vectors.Float4;
 
 import static com.vinhderful.raytracer.utils.Angle.TO_RADIANS;
 
